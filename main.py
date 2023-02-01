@@ -1,2 +1,4 @@
+from candy_crush import run_candy_crush
+
 if __name__ == '__main__':
-    pass
+    run_candy_crush()
