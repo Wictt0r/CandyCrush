@@ -1,34 +1,36 @@
-from typing import Any
+from typing import Tuple
 
 import pygame.draw
-from pygame import font
 
 
 class Button:
 
-    def __init__(self, text, on_action, pos, width, height, primary_color, secondary_color, tertiary_color):  # add elevation?
+    def __init__(self, text=None, image=None, on_action=lambda: None, pos=(0, 0), width: int = 0, height: int = 0,
+                 colors: Tuple[str, str, str] = ('#cdcccb', '#c6c5c3', '#bebdbb')):  # add elevation?
         self.pressed = False
         self.elevation = 6
         self.dynamic_elevation = self.elevation
-        self.original_y_pos = pos[1]
+        self.pos = pos
         self.on_action = on_action
 
-        self.primary_color = primary_color
-        self.secondary_color = secondary_color
-        self.tertiary_color = tertiary_color
+        self.primary_color = colors[0]
+        self.secondary_color = colors[1]
+        self.tertiary_color = colors[2]
 
         self.top_rect = pygame.Rect(pos, (width, height))
-        self.top_color = primary_color
+        self.top_color = colors[0]
 
         self.bottom_rect = pygame.Rect(pos, (width, self.elevation))
-        self.bottom_color = tertiary_color
+        self.bottom_color = colors[2]
+
+        self.image = pygame.transform.scale(image, (width - 10, height - 10)) if image is not None else None
 
         self.font = pygame.font.SysFont("font", 25)
         self.text_surface = self.font.render(text, True, 'White')
         self.text_rect = self.text_surface.get_rect(center=self.top_rect.center)
 
-    def draw(self, screen):
-        self.top_rect.y = self.original_y_pos - self.dynamic_elevation
+    def draw(self, screen: pygame.Surface):
+        self.top_rect.y = self.pos[1] - self.dynamic_elevation
         self.text_rect.center = self.top_rect.center
 
         self.bottom_rect.midtop = self.top_rect.midtop
@@ -36,7 +38,12 @@ class Button:
 
         pygame.draw.rect(screen, self.bottom_color, self.bottom_rect, border_radius=20)
         pygame.draw.rect(screen, self.top_color, self.top_rect, border_radius=20)
-        screen.blit(self.text_surface, self.text_rect)
+
+        if self.text_surface is not None:
+            screen.blit(self.text_surface, self.text_rect)
+        if self.image is not None:
+            screen.blit(self.image, dest=(self.pos[0] + 4, self.pos[1] - self.dynamic_elevation + 5))
+
         self.is_pressed()
 
     def is_pressed(self):
@@ -46,11 +53,17 @@ class Button:
             if pygame.mouse.get_pressed()[0]:
                 self.dynamic_elevation = 0
                 self.pressed = True
+                self.on_action()
             else:
                 self.dynamic_elevation = self.elevation
                 if self.pressed:
-                    self.on_action()
                     self.pressed = False
         else:
             self.dynamic_elevation = self.elevation
             self.top_color = self.primary_color
+
+    def move(self, x: int, y: int):
+        self.pos = (self.pos[0] + x, self.pos[1] + y)
+        self.top_rect.center = self.pos
+        self.bottom_rect.center =self.pos
+
