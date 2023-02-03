@@ -1,4 +1,5 @@
-from candy_crush import run_candy_crush
+from candy_crush import  CandyCrush
 
 if __name__ == '__main__':
-    run_candy_crush()
+    game = CandyCrush()
+    game.run()
