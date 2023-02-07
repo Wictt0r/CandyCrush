@@ -9,7 +9,7 @@ from levels_screen.levels_screen import LevelsScreen
 class CandyCrush:
     def __init__(self):
         pygame.init()
-        self.current_screen = "levels_screen"
+        self.current_screen = "game_screen"
         self.screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.fps_clock = pygame.time.Clock()
         self.entry_screen = EntryScreen(self)
@@ -28,7 +28,7 @@ class CandyCrush:
             elif self.current_screen == "levels_screen":
                 self.levels_screen.display()
             elif self.current_screen == "game_screen":
-                self.game_screen.start_game()
+                self.game_screen.start_game(moves=20)
             self.check_for_quit()
             pygame.display.update()
             self.fps_clock.tick(FPS)
