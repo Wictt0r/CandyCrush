@@ -11,7 +11,7 @@ class LevelsScreen:
         self.game = game
         self.background = pygame.image.load('assets/levels_screen_background.webp')
         self.background = pygame.transform.scale(self.background, (WINDOW_WIDTH, WINDOW_HEIGHT))
-        self.top_bar = TopBar()
+        self.top_bar = TopBar(game)
 
         self.right_img = pygame.image.load('assets/arrow.png')
         self.left_img = pygame.transform.rotate(pygame.image.load('assets/arrow.png'), 180)
@@ -33,20 +33,18 @@ class LevelsScreen:
             width=50,
             height=50
         )
-
-        self.current_level = 3
-        self.levels = [1, 2, 3, 4]
         self.levels_buttons = [
             Button(
-                text=str(level),
+                text=str(level + 1),
                 width=self.level_button_width,
                 height=50,
-                on_action=lambda: self.game.set_screen('game_screen'),
+                on_action=lambda level=level: self.start_level(level),
                 pos=(
-                    (level - self.current_level) * self.levels_distance + WINDOW_WIDTH / 2 - self.level_button_width,
+                    (
+                            level - self.game.current_max_level) * self.levels_distance + WINDOW_WIDTH / 2 - self.level_button_width,
                     450)
             )
-            for level in self.levels]
+            for level in range(len(self.game.levels_info))]
 
     def display(self):
         screen = self.game.screen
@@ -62,16 +60,23 @@ class LevelsScreen:
             pygame.display.update()
             self.game.fps_clock.tick(FPS)
 
-
     def move_button_if_needed(self, button: Button):
         if self.levels_move != 0:
             if self.levels_move > 0:
-                button.move(1, 0)
+                button.move(4, 0)
                 self.levels_move -= 1
             else:
-                button.move(-1, 0)
+                button.move(-4, 0)
                 self.levels_move += 1
 
     def set_levels_move(self, move: int):
         if self.levels_move == 0:
             self.levels_move = move
+
+    def start_level(self, level):
+        if self.game.lives == 0:
+            return
+        if level > self.game.current_max_level:
+            return
+        self.game.level_to_play = level
+        self.game.set_screen('game_screen')

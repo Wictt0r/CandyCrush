@@ -27,6 +27,7 @@ class GameScreen:
         self.board = None
         self.score: int = 0
         self.moves: int = 0
+        self.required_colors = DEFAULT_REQUIRED_COLORS
         self.assets = []
         self.load_assets()
 
@@ -42,10 +43,15 @@ class GameScreen:
                 )
             self.board_rectangles.append(rects)
 
-    def start_game(self, moves: int = 0, required_gems=[]):
+    def start_game(self, level_info: dict =
+    {'moves': 10,
+     'required_score': -1,
+     'required_colors': DEFAULT_REQUIRED_COLORS
+     }):
         screen = self.game.screen
-        self.moves = moves
-        self.score = 0
+        self.moves = level_info['moves']
+        self.score = level_info['required_score']
+        self.required_colors = level_info['required_colors']
         self.create_blank_board()
         self.fill_board_and_animate()
         last_mouse_pos = None
@@ -75,13 +81,12 @@ class GameScreen:
                     first_swapping_tile, second_swapping_tile = \
                         self.get_tiles_to_swap(first_selected_tile_pos, clicked_space)
                     if first_swapping_tile is None and second_swapping_tile is None:
-                        first_selected_tile_pos = None  # deselect the first gem
+                        first_selected_tile_pos = None
                         continue
 
                     board_copy = self.copy_board_without_moving_tiles((first_swapping_tile, second_swapping_tile))
                     self.animate_moving_tiles(board_copy, [first_swapping_tile, second_swapping_tile])
 
-                    # Swap the gems in the board data structure.
                     self.board[first_swapping_tile['x']][first_swapping_tile['y']] = second_swapping_tile[IMAGE_ID]
                     self.board[second_swapping_tile['x']][second_swapping_tile['y']] = first_swapping_tile[IMAGE_ID]
 
@@ -113,8 +118,11 @@ class GameScreen:
             self.draw_board(self.board)
             pygame.display.update()
             self.game.fps_clock.tick(FPS)
-
         self.game.set_screen('levels_screen')
+        if self.is_level_complete():
+            return True
+        else:
+            return False
 
     def can_make_move(self):
         for x in range(self.board_height):
