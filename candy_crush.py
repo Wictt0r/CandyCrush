@@ -1,6 +1,9 @@
+import copy
 import os.path
 import time
 from datetime import datetime
+
+import sys
 
 import pygame
 
@@ -40,12 +43,13 @@ class CandyCrush:
                 self.levels_screen.display()
             elif self.current_screen == "game_screen":
                 game_result = self.game_screen.start_game(
-                    level_info=self.levels_info[self.level_to_play]
+                    level_info=copy.deepcopy(self.levels_info[self.level_to_play])
                 )
                 if game_result:
                     self.current_max_level += 1
                 else:
                     self.lives -= 1
+                self.save_user_info()
             self.check_for_quit()
             pygame.display.update()
             self.fps_clock.tick(FPS)
@@ -54,6 +58,7 @@ class CandyCrush:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                sys.exit()
 
     def load_levels_info(self):
         if not os.path.exists(LEVELS_INFO_FILE):

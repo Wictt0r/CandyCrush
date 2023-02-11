@@ -1,6 +1,6 @@
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 800
-FPS = 60
+FPS = 30
 
 LEVELS_INFO_FILE = 'levels.txt'
 USER_INFO_FILE = 'user_info.txt'
@@ -23,6 +23,8 @@ BOARD_COLOR = 'BLACK'
 BOARD_TILE_SIZE = 64
 EMPTY_SPACE = -1
 FALLING_TILE = -2
+
+SPECIAL_TILE = 28
 
 UP = 'up'
 DOWN = 'down'
