@@ -111,7 +111,7 @@ class GameScreen:
         self.create_board_with_tiles()
         last_mouse_pos = None
         first_selected_tile_pos = None
-        while self.moves != 0 and not self.is_level_complete(level_info):
+        while self.moves != 0 and not self.is_level_complete():
             clicked_space = None
             for event in pygame.event.get():
                 if event.type == MOUSEBUTTONUP:
@@ -648,11 +648,11 @@ class GameScreen:
             else:
                 self.board[0][tile['y']] = tile[IMAGE_ID]
 
-    def is_level_complete(self, level_info) -> bool:
-        if level_info['required_score'] != -1 and self.score < level_info['required_score'] != -1:
+    def is_level_complete(self) -> bool:
+        if self.required_score != -1 and self.score < self.required_score != -1:
             return False
         for color in TILE_COLORS:
-            if level_info['required_colors'][color] != 0:
+            if self.required_colors[color] != 0:
                 return False
         return True
 
@@ -698,10 +698,28 @@ class GameScreen:
         return tiles_to_remove
 
     def draw_stats(self):
+        screen = self.game.screen
         moves_text = self.font.render('Moves left: ' + str(self.moves), True, 'White')
         score_text = self.font.render('Score: ' + str(self.score), True, 'White')
-        self.game.screen.blit(moves_text, (20, 20))
-        self.game.screen.blit(score_text, (WINDOW_WIDTH - 150, 20))
+        shown_colors = 0
+        for color in self.required_colors:
+            color_value = self.required_colors.get(color)
+            if color_value != -1:
+                text = self.font.render(str(color_value), True, 'White')
+                image = pygame.transform.scale(self.assets[TILE_COLORS.index(color)],
+                                               (BOARD_TILE_SIZE / 2, BOARD_TILE_SIZE / 2))
+                screen.blit(image,
+                            (self.margin_horizontal + shown_colors * 80,
+                             80 - 8))
+                screen.blit(text,
+                            (self.margin_horizontal + 40 + shown_colors * 80,
+                             80))
+                shown_colors += 1
+        if self.required_score != -1:
+            text = self.font.render('Required score: ' + str(self.required_score), True, 'White')
+            screen.blit(text, (WINDOW_WIDTH - 200, 50))
+        screen.blit(moves_text, (20, 20))
+        screen.blit(score_text, (WINDOW_WIDTH - 200, 20))
 
     def load_assets(self):
         for i in range(29):
@@ -714,5 +732,6 @@ class GameScreen:
         if tile is None:
             return
         tile_color = get_tile_color(tile)
-        if self.required_colors[tile_color] != 0 and self.required_colors[tile_color] != -1:
+        if tile_color != '' and \
+                self.required_colors[tile_color] != 0 and self.required_colors[tile_color] != -1:
             self.required_colors[tile_color] -= 1
