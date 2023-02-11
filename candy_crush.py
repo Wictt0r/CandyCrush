@@ -46,7 +46,8 @@ class CandyCrush:
                     level_info=copy.deepcopy(self.levels_info[self.level_to_play])
                 )
                 if game_result:
-                    self.current_max_level += 1
+                    if self.level_to_play == self.current_max_level:
+                        self.current_max_level += 1
                 else:
                     self.lives -= 1
                 self.save_user_info()
@@ -64,9 +65,7 @@ class CandyCrush:
         if not os.path.exists(LEVELS_INFO_FILE):
             raise Exception('Can not load levels information. File missing.')
         with open(LEVELS_INFO_FILE) as level_file:
-            levels_count = int(level_file.readline())
-            for _ in range(levels_count):
-                level_info = level_file.readline()
+            for level_info in level_file:
                 level_info_parts = level_info.split(' ')
                 moves = int(level_info_parts[0])
                 required_score = int(level_info_parts[1])

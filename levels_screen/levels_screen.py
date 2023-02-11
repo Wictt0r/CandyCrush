@@ -2,7 +2,8 @@ import pygame
 
 from common.button import Button
 from common.topbar import TopBar
-from constants import WINDOW_WIDTH, WINDOW_HEIGHT, FPS
+from constants import WINDOW_WIDTH, WINDOW_HEIGHT, FPS, INACTIVE_LEVELS_COLORS, \
+    PASSED_LEVELS_COLOR, CURRENT_LEVEL_COLOR
 
 
 class LevelsScreen:
@@ -23,28 +24,28 @@ class LevelsScreen:
         self.right = Button(
             image=self.right_img,
             on_action=lambda: self.set_levels_move(self.levels_distance),
-            pos=(WINDOW_WIDTH - 100, 350),
+            pos=(WINDOW_WIDTH - 100, WINDOW_HEIGHT - 250),
             width=50, height=50
         )
         self.left = Button(
             image=self.left_img,
             on_action=lambda: self.set_levels_move(-self.levels_distance),
-            pos=(50, 350),
+            pos=(50, WINDOW_HEIGHT - 250),
             width=50,
             height=50
         )
-        self.levels_buttons = [
-            Button(
+        self.levels_buttons = []
+        for level in range(len(self.game.levels_info)):
+            button_x = (level - self.game.current_max_level) * self.levels_distance \
+                       + WINDOW_WIDTH / 2 - self.level_button_width
+            button = Button(
                 text=str(level + 1),
                 width=self.level_button_width,
                 height=50,
-                on_action=lambda level=level: self.start_level(level),
-                pos=(
-                    (
-                            level - self.game.current_max_level) * self.levels_distance + WINDOW_WIDTH / 2 - self.level_button_width,
-                    450)
+                on_action=lambda lvl=level: self.start_level(lvl),
+                pos=(button_x, WINDOW_HEIGHT - 150)
             )
-            for level in range(len(self.game.levels_info))]
+            self.levels_buttons.append(button)
 
     def display(self):
         screen = self.game.screen
@@ -53,8 +54,15 @@ class LevelsScreen:
             self.top_bar.draw(screen)
             self.left.draw(screen)
             self.right.draw(screen)
-            for button in self.levels_buttons:
+            for index, button in enumerate(self.levels_buttons):
                 self.move_button_if_needed(button)
+                button.active = index <= self.game.current_max_level
+                if index == self.game.current_max_level:
+                    button.set_colors(CURRENT_LEVEL_COLOR)
+                elif index < self.game.current_max_level:
+                    button.set_colors(PASSED_LEVELS_COLOR)
+                else:
+                    button.set_colors(INACTIVE_LEVELS_COLORS)
                 button.draw(screen)
             self.game.check_for_quit()
             pygame.display.update()

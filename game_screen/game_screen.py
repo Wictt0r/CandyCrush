@@ -111,7 +111,8 @@ class GameScreen:
         self.create_board_with_tiles()
         last_mouse_pos = None
         first_selected_tile_pos = None
-        while self.moves != 0 and not self.is_level_complete():
+        while self.moves != 0 and not self.is_level_complete() and \
+                self.game.current_screen == 'game_screen':
             clicked_space = None
             for event in pygame.event.get():
                 if event.type == MOUSEBUTTONUP:
@@ -182,7 +183,7 @@ class GameScreen:
             pygame.display.update()
             self.game.fps_clock.tick(FPS)
         self.game.set_screen('levels_screen')
-        return self.is_level_complete(level_info)
+        return self.is_level_complete()
 
     def can_make_move(self):
         for x in range(self.board_height):
@@ -652,7 +653,7 @@ class GameScreen:
         if self.required_score != -1 and self.score < self.required_score != -1:
             return False
         for color in TILE_COLORS:
-            if self.required_colors[color] != 0:
+            if self.required_colors[color] != 0 and self.required_colors[color] != -1:
                 return False
         return True
 
@@ -663,7 +664,8 @@ class GameScreen:
                 tile_special_effect = get_tile_special_effect(board_copy[x][remove_y])
                 board_copy[x][remove_y] = EMPTY_SPACE
                 tiles_to_remove.append((x, remove_y))
-                if tile_special_effect != 'horizontal' and tile_special_effect != '' and remove_y != y:
+                if tile_special_effect != 'horizontal' and tile_special_effect != '' \
+                        and remove_y != y:
                     tiles_to_remove.extend(
                         self.apply_special_effect(board_copy, tile_special_effect, x, remove_y)
                     )
@@ -672,7 +674,8 @@ class GameScreen:
                 tile_special_effect = get_tile_special_effect(board_copy[remove_x][y])
                 board_copy[remove_x][y] = EMPTY_SPACE
                 tiles_to_remove.append((remove_x, y))
-                if tile_special_effect != 'vertical' and tile_special_effect != '' and remove_x != x:
+                if tile_special_effect != 'vertical' and tile_special_effect != '' \
+                        and remove_x != x:
                     tiles_to_remove.extend(
                         self.apply_special_effect(board_copy, tile_special_effect, remove_x, y)
                     )
