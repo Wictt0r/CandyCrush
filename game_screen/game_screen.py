@@ -98,6 +98,10 @@ class GameScreen:
             self.board_rectangles.append(rects)
 
     def start_game(self, level_info: dict) -> bool:
+        """
+        :param level_info: moves, required score and required tiles of each color
+        :return: whether the level was passed or failed
+        """
         self.moves = level_info['moves']
         self.required_score = level_info['required_score']
         self.required_colors = level_info['required_colors']
@@ -134,38 +138,7 @@ class GameScreen:
                         first_selected_tile_pos = None
                         continue
 
-                    board_copy = self.copy_board_without_moving_tiles(
-                        (first_swapping_tile, second_swapping_tile))
-                    self.animate_moving_tiles(board_copy,
-                                              [first_swapping_tile, second_swapping_tile])
-
-                    self.board[first_swapping_tile['x']][first_swapping_tile['y']] = \
-                        second_swapping_tile[IMAGE_ID]
-                    self.board[second_swapping_tile['x']][second_swapping_tile['y']] = \
-                        first_swapping_tile[IMAGE_ID]
-
-                    matched_tiles = self.get_matching_tiles(first_swapping_tile,
-                                                            second_swapping_tile)
-                    if not matched_tiles:
-                        self.animate_moving_tiles(board_copy,
-                                                  [first_swapping_tile, second_swapping_tile])
-                        self.board[first_swapping_tile['x']][first_swapping_tile['y']] = \
-                            first_swapping_tile[
-                                IMAGE_ID]
-                        self.board[second_swapping_tile['x']][second_swapping_tile['y']] = \
-                            second_swapping_tile[
-                                IMAGE_ID]
-                    else:
-                        self.moves -= 1
-                        while matched_tiles:
-                            for tile_set in matched_tiles:
-                                self.score += (10 + (len(tile_set) - 3) * 10)
-                                for tile in tile_set:
-                                    self.remove_tile_from_required_colors(tile)
-                                    self.board[tile[0]][tile[1]] = EMPTY_SPACE
-                            self.fill_board_and_animate()
-                            matched_tiles = self.get_matching_tiles()
-
+                    self.apply_move_and_check_for_matches(first_swapping_tile, second_swapping_tile)
                     first_selected_tile_pos = None
 
             if not self.can_make_move():
@@ -178,6 +151,39 @@ class GameScreen:
             self.game.fps_clock.tick(FPS)
         self.game.set_screen('levels_screen')
         return self.is_level_complete()
+
+    def apply_move_and_check_for_matches(self, first_swapping_tile, second_swapping_tile):
+        board_copy = self.copy_board_without_moving_tiles(
+            (first_swapping_tile, second_swapping_tile))
+        self.animate_moving_tiles(board_copy,
+                                  [first_swapping_tile, second_swapping_tile])
+
+        self.board[first_swapping_tile['x']][first_swapping_tile['y']] = \
+            second_swapping_tile[IMAGE_ID]
+        self.board[second_swapping_tile['x']][second_swapping_tile['y']] = \
+            first_swapping_tile[IMAGE_ID]
+
+        matched_tiles = self.get_matching_tiles(first_swapping_tile,
+                                                second_swapping_tile)
+        if not matched_tiles:
+            self.animate_moving_tiles(board_copy,
+                                      [first_swapping_tile, second_swapping_tile])
+            self.board[first_swapping_tile['x']][first_swapping_tile['y']] = \
+                first_swapping_tile[
+                    IMAGE_ID]
+            self.board[second_swapping_tile['x']][second_swapping_tile['y']] = \
+                second_swapping_tile[
+                    IMAGE_ID]
+        else:
+            self.moves -= 1
+            while matched_tiles:
+                for tile_set in matched_tiles:
+                    self.score += (10 + (len(tile_set) - 3) * 10)
+                    for tile in tile_set:
+                        self.remove_tile_from_required_colors(tile)
+                        self.board[tile[0]][tile[1]] = EMPTY_SPACE
+                self.fill_board_and_animate()
+                matched_tiles = self.get_matching_tiles()
 
     def can_make_move(self) -> bool:
         for x in range(self.board_height):
@@ -305,65 +311,72 @@ class GameScreen:
         elif first_tile_effect == second_tile_effect == 'bomb':
             tiles_to_remove = self.apply_bomb(board_copy, second_matching_tile_pos['x'],
                                               second_matching_tile_pos['y'], 2)
-
         elif (first_tile_effect == 'horizontal' or first_tile_effect == 'vertical') and \
                 (second_tile_effect == 'horizontal' or second_tile_effect == 'vertical'):
             tiles_to_remove.extend(
-                self.apply_special_effect(board_copy,
-                                          x=second_matching_tile_pos['x'],
-                                          y=second_matching_tile_pos['y'],
-                                          special_effect='vertical')
-            )
-            tiles_to_remove.extend(
-                self.apply_special_effect(board_copy,
-                                          x=second_matching_tile_pos['x'],
-                                          y=second_matching_tile_pos['y'],
-                                          special_effect='horizontal')
+                self.get_two_lines_effect(board_copy, second_matching_tile_pos)
             )
         elif ((first_tile_effect == 'horizontal' or first_tile_effect == 'vertical') and
               second_tile_effect == 'bomb') or \
                 (first_tile_effect == 'bomb' and (second_tile_effect == 'horizontal' or
                                                   second_tile_effect == 'vertical')):
-            if second_matching_tile_pos['y'] - 1 > 0:
-                tiles_to_remove.extend(
-                    self.apply_special_effect(board_copy,
-                                              x=second_matching_tile_pos['x'],
-                                              y=second_matching_tile_pos['y'] - 1,
-                                              special_effect='vertical')
-                )
             tiles_to_remove.extend(
-                self.apply_special_effect(board_copy,
-                                          x=second_matching_tile_pos['x'],
-                                          y=second_matching_tile_pos['y'],
-                                          special_effect='vertical')
+                self.get_bomb_and_line_effect(board_copy, second_matching_tile_pos)
             )
-            if second_matching_tile_pos['y'] + 1 < self.board_width:
-                tiles_to_remove.extend(
-                    self.apply_special_effect(board_copy,
-                                              x=second_matching_tile_pos['x'],
-                                              y=second_matching_tile_pos['y'] + 1,
-                                              special_effect='vertical')
-                )
-            if second_matching_tile_pos['x'] - 1 > 0:
-                tiles_to_remove.extend(
-                    self.apply_special_effect(board_copy,
-                                              x=second_matching_tile_pos['x'] - 1,
-                                              y=second_matching_tile_pos['y'],
-                                              special_effect='horizontal')
-                )
+        return tiles_to_remove
+
+    def get_two_lines_effect(self, board_copy, second_matching_tile_pos: dict) -> list:
+        tiles_to_remove = []
+        tiles_to_remove.extend(
+            self.apply_special_effect(board_copy,
+                                      x=second_matching_tile_pos['x'],
+                                      y=second_matching_tile_pos['y'],
+                                      special_effect='vertical')
+        )
+        tiles_to_remove.extend(
+            self.apply_special_effect(board_copy,
+                                      x=second_matching_tile_pos['x'],
+                                      y=second_matching_tile_pos['y'],
+                                      special_effect='horizontal')
+        )
+        return tiles_to_remove
+
+    def get_bomb_and_line_effect(self, board_copy, second_matching_tile_pos: dict) -> list:
+        tiles_to_remove = []
+        if second_matching_tile_pos['y'] - 1 > 0:
             tiles_to_remove.extend(
-                self.apply_special_effect(board_copy,
+                self.apply_special_effect(board_copy, special_effect='vertical',
                                           x=second_matching_tile_pos['x'],
-                                          y=second_matching_tile_pos['y'],
-                                          special_effect='horizontal')
+                                          y=second_matching_tile_pos['y'] - 1)
             )
-            if second_matching_tile_pos['x'] + 1 < self.board_height:
-                tiles_to_remove.extend(
-                    self.apply_special_effect(board_copy,
-                                              x=second_matching_tile_pos['x'] + 1,
-                                              y=second_matching_tile_pos['y'],
-                                              special_effect='horizontal')
-                )
+        tiles_to_remove.extend(
+            self.apply_special_effect(board_copy, special_effect='vertical',
+                                      x=second_matching_tile_pos['x'],
+                                      y=second_matching_tile_pos['y'])
+        )
+        if second_matching_tile_pos['y'] + 1 < self.board_width:
+            tiles_to_remove.extend(
+                self.apply_special_effect(board_copy, special_effect='vertical',
+                                          x=second_matching_tile_pos['x'],
+                                          y=second_matching_tile_pos['y'] + 1)
+            )
+        if second_matching_tile_pos['x'] - 1 > 0:
+            tiles_to_remove.extend(
+                self.apply_special_effect(board_copy, special_effect='horizontal',
+                                          x=second_matching_tile_pos['x'] - 1,
+                                          y=second_matching_tile_pos['y'])
+            )
+        tiles_to_remove.extend(
+            self.apply_special_effect(board_copy, special_effect='horizontal',
+                                      x=second_matching_tile_pos['x'],
+                                      y=second_matching_tile_pos['y'])
+        )
+        if second_matching_tile_pos['x'] + 1 < self.board_height:
+            tiles_to_remove.extend(
+                self.apply_special_effect(board_copy, special_effect='horizontal',
+                                          x=second_matching_tile_pos['x'] + 1,
+                                          y=second_matching_tile_pos['y'])
+            )
         return tiles_to_remove
 
     def remove_all_tiles_of_color(self, board_copy, color: str, special: str):
@@ -530,7 +543,7 @@ class GameScreen:
     def fill_board_and_animate(self, animate: bool = True):
         columns_fill = self.get_columns_fill()
         while columns_fill:
-            moving_tiles = self.get_dropping_tiles()
+            moving_tiles = self.get_falling_tiles()
             for y in range(len(columns_fill[0])):
                 if columns_fill[0][y] == EMPTY_SPACE:
                     continue
@@ -545,8 +558,10 @@ class GameScreen:
             del columns_fill[0]
 
     def get_columns_fill(self):
-        # Returns how many tiles are needed to fill each column in each line
-        # and EMPTY_SPACE if none are needed
+        """
+        :return: how many tiles are needed to fill each column in each line and
+         EMPTY_SPACE if none are needed
+        """
         board_copy = copy.deepcopy(self.board)
         self.pull_down_tiles(board_copy)
 
@@ -562,8 +577,11 @@ class GameScreen:
                     column_fill[x].append(EMPTY_SPACE)
         return column_fill
 
-    def pull_down_tiles(self, board_copy):
-        # pulls all tiles to the bottom if there are any empty spaces
+    def pull_down_tiles(self, board_copy) -> None:
+        """
+        Pulls all tiles to the bottom if there are any empty spaces
+        """
+        #
         for y in range(self.board_width):
             tiles_in_column = []
             for x in range(self.board_height):
@@ -577,7 +595,7 @@ class GameScreen:
                 else:
                     board_copy[x][y] = EMPTY_SPACE
 
-    def get_dropping_tiles(self) -> list[dict]:
+    def get_falling_tiles(self) -> list[dict]:
         dropping_tiles = []
         board_copy = copy.deepcopy(self.board)
         for x in range(self.board_height - 2, -1, -1):
@@ -704,17 +722,14 @@ class GameScreen:
         shown_colors = 0
         for color in self.required_colors:
             color_value = self.required_colors.get(color)
-            if color_value != -1:
-                text = self.font.render(str(color_value), True, 'White')
-                image = pygame.transform.scale(self.assets[TILE_COLORS.index(color)],
-                                               (BOARD_TILE_SIZE / 2, BOARD_TILE_SIZE / 2))
-                screen.blit(image,
-                            (self.margin_horizontal + shown_colors * 80,
-                             80 - 8))
-                screen.blit(text,
-                            (self.margin_horizontal + 40 + shown_colors * 80,
-                             80))
-                shown_colors += 1
+            if color_value == -1:
+                continue
+            text = self.font.render(str(color_value), True, 'White')
+            image = pygame.transform.scale(self.assets[TILE_COLORS.index(color)],
+                                           (BOARD_TILE_SIZE / 2, BOARD_TILE_SIZE / 2))
+            screen.blit(image, (self.margin_horizontal + shown_colors * 80, 80 - 8))
+            screen.blit(text, (self.margin_horizontal + 40 + shown_colors * 80, 80))
+            shown_colors += 1
         if self.required_score != -1:
             text = self.font.render('Required score: ' + str(self.required_score), True, 'White')
             screen.blit(text, (WINDOW_WIDTH - 200, 50))
