@@ -5,6 +5,7 @@ import sys
 import pygame
 from pygame.constants import MOUSEBUTTONUP, MOUSEBUTTONDOWN
 
+from common.button import Button
 from constants import *
 
 
@@ -76,6 +77,13 @@ class GameScreen:
         self.margin_horizontal = (WINDOW_WIDTH - self.board_width * BOARD_TILE_SIZE) // 2
         self.board_rectangles = []
         self.create_board_rectangles()
+        self.quit_button = Button(
+            text="Quit",
+            on_action=lambda: self.game.set_screen("levels"),
+            pos=(WINDOW_WIDTH - 125, 120),
+            width=100,
+            height=50,
+        )
 
         self.board = None
         self.score: int = 0
@@ -147,6 +155,7 @@ class GameScreen:
             self.game.screen.blit(self.background, (0, 0))
             self.draw_stats()
             self.draw_board(self.board)
+            self.quit_button.draw(self.game.screen)
             pygame.display.update()
             self.game.fps_clock.tick(FPS)
         self.game.set_screen('levels_screen')
@@ -621,6 +630,7 @@ class GameScreen:
             for tile in moving_tiles:
                 self.draw_moving_tile(tile, progress)
             self.draw_stats()
+            self.quit_button.draw(self.game.screen)
             pygame.display.update()
             self.game.fps_clock.tick(FPS)
 

@@ -17,19 +17,19 @@ class LevelsScreen:
         self.right_img = pygame.image.load('assets/arrow.png')
         self.left_img = pygame.transform.rotate(pygame.image.load('assets/arrow.png'), 180)
 
-        self.levels_distance = 75
+        self.levels_distance = 100
         self.levels_move = 0
-        self.level_button_width = 50
+        self.level_button_width = 60
 
         self.right = Button(
             image=self.right_img,
-            on_action=lambda: self.set_levels_move(self.levels_distance),
+            on_action=lambda: self.set_levels_move(-self.levels_distance),
             pos=(WINDOW_WIDTH - 100, WINDOW_HEIGHT - 250),
             width=50, height=50
         )
         self.left = Button(
             image=self.left_img,
-            on_action=lambda: self.set_levels_move(-self.levels_distance),
+            on_action=lambda: self.set_levels_move(self.levels_distance),
             pos=(50, WINDOW_HEIGHT - 250),
             width=50,
             height=50
