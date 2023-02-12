@@ -24,7 +24,7 @@ class TopBar:
                                                (75, 30))
         self.lives_recharge_text = self.font.render("text", True, 'White')
 
-    def draw(self, screen: pygame.Surface):
+    def draw(self, screen: pygame.Surface) -> None:
         self.lives_display_text = self.font.render(str(self.game.lives), True, 'White')
         self.lives_recharge_text = self.font.render(self.get_life_recharge_text(), True, 'White')
 
@@ -35,7 +35,7 @@ class TopBar:
         screen.blit(self.lives_display_text, (25, 17))
         screen.blit(self.lives_recharge_text, (55, 17))
 
-    def get_life_recharge_text(self):
+    def get_life_recharge_text(self) -> str:
         if self.game.lives == MAX_LIVES:
             return 'Full'
         else:

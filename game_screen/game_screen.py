@@ -25,7 +25,7 @@ def get_special_tile(original_color: int, special_type: str) -> int:
     return original_color
 
 
-def get_tile_color(tile) -> str:
+def get_tile_color(tile: int) -> str:
     """
     :param tile: the int value of the tile
     :return: the color of the tile
@@ -85,7 +85,7 @@ class GameScreen:
         self.assets = []
         self.load_assets()
 
-    def create_board_rectangles(self):
+    def create_board_rectangles(self) -> None:
         for y in range(self.board_height):
             rects = []
             for x in range(self.board_width):
@@ -97,16 +97,10 @@ class GameScreen:
                 )
             self.board_rectangles.append(rects)
 
-    def start_game(self, level_info):
-        if level_info is None:
-            self.moves = 0
-            self.required_score = -1
-            self.required_colors = DEFAULT_REQUIRED_COLORS
-        else:
-            self.moves = level_info['moves']
-            self.required_score = level_info['required_score']
-            self.required_colors = level_info['required_colors']
-        screen = self.game.screen
+    def start_game(self, level_info: dict) -> bool:
+        self.moves = level_info['moves']
+        self.required_score = level_info['required_score']
+        self.required_colors = level_info['required_colors']
         self.score = 0
         self.create_board_with_tiles()
         last_mouse_pos = None
@@ -177,7 +171,7 @@ class GameScreen:
             if not self.can_make_move():
                 self.create_board_with_tiles()
 
-            screen.blit(self.background, (0, 0))
+            self.game.screen.blit(self.background, (0, 0))
             self.draw_stats()
             self.draw_board(self.board)
             pygame.display.update()
@@ -185,7 +179,7 @@ class GameScreen:
         self.game.set_screen('levels_screen')
         return self.is_level_complete()
 
-    def can_make_move(self):
+    def can_make_move(self) -> bool:
         for x in range(self.board_height):
             for y in range(self.board_width):
                 for pattern in POSSIBLE_MOVE_PATTERNS:
@@ -207,7 +201,7 @@ class GameScreen:
                     return {'x': x, 'y': y}
         return None
 
-    def get_tiles_to_swap(self, first_tile_pos, second_tile_pos):
+    def get_tiles_to_swap(self, first_tile_pos: dict, second_tile_pos: dict):
         first_tile = {IMAGE_ID: self.board[first_tile_pos['x']][first_tile_pos['y']],
                       'x': first_tile_pos['x'],
                       'y': first_tile_pos['y']}
@@ -230,28 +224,28 @@ class GameScreen:
             return None, None
         return first_tile, second_tile
 
-    def tile_at(self, board, x, y):
+    def tile_at(self, board, x: int, y: int):
         if x < 0 or y < 0 or x >= self.board_height or y >= self.board_width:
             return None
         else:
             return board[x][y]
 
-    def create_board_with_tiles(self):
+    def create_board_with_tiles(self) -> None:
         """
         Generates a board with no current matches
         """
         self.create_blank_board()
         self.fill_board_and_animate(animate=False)
-        while self.get_matching_tiles() != []:
+        while self.get_matching_tiles():
             self.create_blank_board()
             self.fill_board_and_animate(animate=False)
 
-    def create_blank_board(self):
+    def create_blank_board(self) -> None:
         self.board = []
         for x in range(self.board_height):
             self.board.append([EMPTY_SPACE] * self.board_width)
 
-    def draw_board(self, board):
+    def draw_board(self, board) -> None:
         screen = self.game.screen
         for x in range(self.board_height):
             for y in range(self.board_width):
@@ -260,13 +254,14 @@ class GameScreen:
                 if tile != EMPTY_SPACE:
                     screen.blit(self.assets[tile], self.board_rectangles[x][y])
 
-    def get_matching_tiles(self, first_matching_tile=None, second_matching_tile=None):
+    def get_matching_tiles(self, first_matching_tile: dict = None,
+                           second_matching_tile: dict = None) -> list:
         tiles_to_remove = []
         board_copy = copy.deepcopy(self.board)
         if first_matching_tile is not None and second_matching_tile is not None:
             found_matches = \
                 self.get_special_matches(board_copy, first_matching_tile, second_matching_tile)
-            if found_matches != []:
+            if found_matches:
                 return [list(set(found_matches))]
 
         for x in range(self.board_height):
@@ -279,7 +274,8 @@ class GameScreen:
 
         return tiles_to_remove
 
-    def get_special_matches(self, board_copy, first_matching_tile_pos, second_matching_tile_pos):
+    def get_special_matches(self, board_copy, first_matching_tile_pos: dict,
+                            second_matching_tile_pos: dict) -> list:
         tiles_to_remove = []
         first_tile = first_matching_tile_pos[IMAGE_ID]
         second_tile = second_matching_tile_pos[IMAGE_ID]
@@ -370,7 +366,7 @@ class GameScreen:
                 )
         return tiles_to_remove
 
-    def remove_all_tiles_of_color(self, board_copy, color, special):
+    def remove_all_tiles_of_color(self, board_copy, color: str, special: str):
         removed_tiles = []
         for y in range(self.board_width):
             for x in range(self.board_height):
@@ -386,8 +382,8 @@ class GameScreen:
                     removed_tiles.append((x, y))
         return removed_tiles
 
-    def get_tiles_to_remove_around(self, board_copy, x, y, first_matching_tile,
-                                   second_matching_tile):
+    def get_tiles_to_remove_around(self, board_copy, x: int, y: int, first_matching_tile: dict,
+                                   second_matching_tile: dict):
         tiles_to_remove = []
         target_tile = board_copy[x][y]
         if target_tile == SPECIAL_TILE:
@@ -421,8 +417,9 @@ class GameScreen:
             board_copy[tile[0]][tile[1]] = EMPTY_SPACE
         return tiles_to_remove
 
-    def get_tiles_to_remove_direction(self, board_copy, x, y, first_switched_tile,
-                                      second_switched_tile, direction):
+    def get_tiles_to_remove_direction(self, board_copy, x: int, y: int,
+                                      first_switched_tile: (int, int),
+                                      second_switched_tile: (int, int), direction: str):
         target_tile = board_copy[x][y]
         target_tile_color = get_tile_color(target_tile)
         if direction == 'horizontal':
@@ -482,7 +479,7 @@ class GameScreen:
                 self.board[x + 2][y] = SPECIAL_TILE
         return tiles_to_remove
 
-    def get_same_tiles_above_and_below(self, board, x, y):
+    def get_same_tiles_above_and_below(self, board, x: int, y: int):
         tiles = []
         target_tile = self.tile_at(board, x, y)
         if target_tile is None:
@@ -506,7 +503,7 @@ class GameScreen:
             tiles.append((x + 1, y))
         return tiles
 
-    def get_same_tiles_left_and_right(self, board, x, y):
+    def get_same_tiles_left_and_right(self, board, x: int, y: int):
         tiles = []
         target_tile = self.tile_at(board, x, y)
         if target_tile is None:
@@ -532,7 +529,7 @@ class GameScreen:
 
     def fill_board_and_animate(self, animate: bool = True):
         columns_fill = self.get_columns_fill()
-        while columns_fill != []:
+        while columns_fill:
             moving_tiles = self.get_dropping_tiles()
             for y in range(len(columns_fill[0])):
                 if columns_fill[0][y] == EMPTY_SPACE:
@@ -598,7 +595,7 @@ class GameScreen:
                 board_copy[moving_tile['x']][moving_tile['y']] = EMPTY_SPACE
         return board_copy
 
-    def animate_moving_tiles(self, board_copy, moving_tiles):
+    def animate_moving_tiles(self, board_copy, moving_tiles: list) -> None:
         screen = self.game.screen
         for progress in range(0, 100, 25):
             screen.blit(self.background, (0, 0))
@@ -609,7 +606,7 @@ class GameScreen:
             pygame.display.update()
             self.game.fps_clock.tick(FPS)
 
-    def draw_moving_tile(self, tile, progress):
+    def draw_moving_tile(self, tile: dict, progress: int) -> None:
         screen = self.game.screen
         progress *= 0.01
         move_x = 0
@@ -634,7 +631,7 @@ class GameScreen:
             pygame.Rect(y_pos + move_y, x_pos + move_x, BOARD_TILE_SIZE, BOARD_TILE_SIZE)
         )
 
-    def move_tiles(self, moving_tiles):
+    def move_tiles(self, moving_tiles) -> None:
         for tile in moving_tiles:
             if tile['x'] != FALLING_TILE:
                 self.board[tile['x']][tile['y']] = EMPTY_SPACE
@@ -657,7 +654,7 @@ class GameScreen:
                 return False
         return True
 
-    def apply_special_effect(self, board_copy, special_effect, x, y):
+    def apply_special_effect(self, board_copy, special_effect: str, x: int, y: int) -> list:
         tiles_to_remove = []
         if special_effect == 'horizontal':
             for remove_y in range(self.board_width):
@@ -683,7 +680,7 @@ class GameScreen:
             tiles_to_remove.extend(self.apply_bomb(board_copy, x, y, 1))
         return tiles_to_remove
 
-    def apply_bomb(self, board_copy, x, y, bomb_radius):
+    def apply_bomb(self, board_copy, x: int, y: int, bomb_radius: int) -> list:
         tiles_to_remove = []
         for remove_x in (x - bomb_radius, x, x + bomb_radius):
             for remove_y in (y - bomb_radius, y, y + bomb_radius):
@@ -700,7 +697,7 @@ class GameScreen:
                     )
         return tiles_to_remove
 
-    def draw_stats(self):
+    def draw_stats(self) -> None:
         screen = self.game.screen
         moves_text = self.font.render('Moves left: ' + str(self.moves), True, 'White')
         score_text = self.font.render('Score: ' + str(self.score), True, 'White')
@@ -724,13 +721,13 @@ class GameScreen:
         screen.blit(moves_text, (20, 20))
         screen.blit(score_text, (WINDOW_WIDTH - 200, 20))
 
-    def load_assets(self):
+    def load_assets(self) -> None:
         for i in range(29):
             image = pygame.image.load(f'assets/tiles/asset{i}.png')
             image = pygame.transform.scale(image, (BOARD_TILE_SIZE - 3, BOARD_TILE_SIZE - 3))
             self.assets.append(image)
 
-    def remove_tile_from_required_colors(self, tile_pos):
+    def remove_tile_from_required_colors(self, tile_pos: (int, int)) -> None:
         tile = self.tile_at(self.board, tile_pos[0], tile_pos[1])
         if tile is None:
             return

@@ -69,12 +69,12 @@ class Button:
             self.top_color = self.primary_color
             self.pressed = False
 
-    def move(self, x: int, y: int):
+    def move(self, x: int, y: int) -> None:
         self.pos = (self.pos[0] + x, self.pos[1] + y)
         self.top_rect.center = self.pos
         self.bottom_rect.center = self.pos
 
-    def set_colors(self, colors: Tuple[str, str, str]):
+    def set_colors(self, colors: Tuple[str, str, str]) -> None:
         self.primary_color = colors[0]
         self.secondary_color = colors[1]
         self.tertiary_color = colors[2]

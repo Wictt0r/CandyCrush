@@ -47,7 +47,7 @@ class LevelsScreen:
             )
             self.levels_buttons.append(button)
 
-    def display(self):
+    def display(self) -> None:
         screen = self.game.screen
         while self.game.current_screen == 'levels_screen':
             screen.blit(self.background, (0, 0))
@@ -68,7 +68,7 @@ class LevelsScreen:
             pygame.display.update()
             self.game.fps_clock.tick(FPS)
 
-    def move_button_if_needed(self, button: Button):
+    def move_button_if_needed(self, button: Button) -> None:
         if self.levels_move != 0:
             if self.levels_move > 0:
                 button.move(4, 0)
@@ -77,11 +77,11 @@ class LevelsScreen:
                 button.move(-4, 0)
                 self.levels_move += 1
 
-    def set_levels_move(self, move: int):
+    def set_levels_move(self, move: int) -> None:
         if self.levels_move == 0:
             self.levels_move = move
 
-    def start_level(self, level):
+    def start_level(self, level: int) -> None:
         if self.game.lives == 0:
             return
         if level > self.game.current_max_level:

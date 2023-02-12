@@ -30,10 +30,10 @@ class CandyCrush:
         self.levels_screen = LevelsScreen(self)
         self.game_screen = GameScreen(self)
 
-    def set_screen(self, screen: str):
+    def set_screen(self, screen: str) -> None:
         self.current_screen = screen
 
-    def run(self):
+    def run(self) -> None:
         pygame.display.set_caption("Candy crush")
 
         while True:
@@ -55,13 +55,13 @@ class CandyCrush:
             pygame.display.update()
             self.fps_clock.tick(FPS)
 
-    def check_for_quit(self):
+    def check_for_quit(self) -> None:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-    def load_levels_info(self):
+    def load_levels_info(self) -> None:
         if not os.path.exists(LEVELS_INFO_FILE):
             raise Exception('Can not load levels information. File missing.')
         with open(LEVELS_INFO_FILE) as level_file:
@@ -78,13 +78,13 @@ class CandyCrush:
                     'required_colors': colors
                 })
 
-    def increase_lives(self):
+    def increase_lives(self) -> None:
         if self.lives < MAX_LIVES:
             self.lives += 1
             self.last_life_gain_timestamp = int(time.time())
             self.save_user_info()
 
-    def load_user_info(self):
+    def load_user_info(self) -> None:
         if not os.path.exists(USER_INFO_FILE):
             self.last_life_gain_timestamp = int(time.time())
             self.lives = MAX_LIVES
@@ -107,7 +107,7 @@ class CandyCrush:
         else:
             self.last_life_gain_timestamp = int(time.time())
 
-    def save_user_info(self):
+    def save_user_info(self) -> None:
         with open(USER_INFO_FILE, 'w') as user_file:
             user_file.write(str(self.last_life_gain_timestamp) + '\n')
             user_file.write(str(self.lives) + '\n')

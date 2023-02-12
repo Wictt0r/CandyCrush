@@ -28,7 +28,7 @@ class EntryScreen:
             colors=('#f09133', '#d97a1c', '#c0752a')
         )
 
-    def display(self):
+    def display(self) -> None:
         screen = self.game.screen
         while self.game.current_screen == 'entry_screen':
             screen.blit(self.background, (0, 0))
